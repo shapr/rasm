@@ -6,3 +6,4 @@ edition = "2021"
 
 [dependencies]
 time = "*"
+unicode-segmentation = "*"
