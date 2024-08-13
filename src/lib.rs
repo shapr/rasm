@@ -130,10 +130,108 @@ pub fn raindrops(n: u32) -> String {
     result
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum Comparison {
+    Equal,
+    Sublist,
+    Superlist,
+    Unequal,
+}
+
+pub fn sublist<T: PartialEq>(_first_list: &[T], _second_list: &[T]) -> Comparison {
+    /* first guess is that I check one element against all the elements in the other set, if one is equal, this item does not contribute.
+    if there isn't one that's equal, this set could be a super set
+    I guess I need a "for each value, is this value in the other set" sort of result. */
+    // start with the shortest list
+    // check to see if
+    if _first_list == _second_list {
+	return Comparison::Equal;
+    }
+    let first: &[T];
+    let second: &[T];
+    let mut swapped = false;
+    if _first_list.len() <= _second_list.len() {
+	first = _first_list;
+	second = _second_list;
+    } else {
+	first = _second_list;
+	second = _first_list;
+	swapped = true;
+    }
+    let mut matches = vec![];
+    for item in first {
+	matches.push(second.iter().any(|i2| i2 == item));
+    }
+
+    let shorter_is_sublist = matches.iter().all(|f| *f);
+    if shorter_is_sublist {
+	if swapped {
+	    return Comparison::Superlist;
+	} else {
+	    return Comparison::Sublist;
+	}
+    } else {
+	return Comparison::Unequal;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[test]
+    fn empty_lists() {
+	let list_one: &[i32] = &[];
+	let list_two: &[i32] = &[];
+	let output = sublist(list_one, list_two);
+	let expected = Comparison::Equal;
+	assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn empty_list_within_non_empty_list() {
+	let list_one: &[i32] = &[];
+	let list_two: &[i32] = &[1, 2, 3];
+	let output = sublist(list_one, list_two);
+	let expected = Comparison::Sublist;
+	assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn non_empty_list_contains_empty_list() {
+	let list_one: &[i32] = &[1, 2, 3];
+	let list_two: &[i32] = &[];
+	let output = sublist(list_one, list_two);
+	let expected = Comparison::Superlist;
+	assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn list_equals_itself() {
+	let list_one: &[i32] = &[1, 2, 3];
+	let list_two: &[i32] = &[1, 2, 3];
+	let output = sublist(list_one, list_two);
+	let expected = Comparison::Equal;
+	assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn different_lists() {
+	let list_one: &[i32] = &[1, 2, 3];
+	let list_two: &[i32] = &[2, 3, 4];
+	let output = sublist(list_one, list_two);
+	let expected = Comparison::Unequal;
+	assert_eq!(output, expected);
+    }
+
+    #[test]
+    fn first_list_missing_element_from_second_list() {
+	let list_one: &[i32] = &[1, 3];
+	let list_two: &[i32] = &[1, 2, 3];
+	let output = sublist(list_one, list_two);
+	let expected = Comparison::Unequal;
+	assert_eq!(output, expected);
+    }
     #[test]
     fn test_the_sound_for_1_is_1() {
 	let input = 1;
